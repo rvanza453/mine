@@ -12,7 +12,7 @@ export interface Memory {
   };
 }
 
-const BASE_PATH = "/valentine-special";
+const BASE_PATH = "/mine";
 
 export const memories: Memory[] = [
 
