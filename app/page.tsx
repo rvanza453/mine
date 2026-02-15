@@ -20,7 +20,7 @@ export default function Home() {
 
   return (
     <main className="relative min-h-screen bg-black text-white overflow-hidden">
-      <audio ref={audioRef} src="/valentine-special/assets/mp3/music.mp3" loop hidden />
+      <audio ref={audioRef} src="/mine/assets/mp3/music.mp3" loop hidden />
 
       {isStarted && <BackgroundMusic audioRef={audioRef} />}
 
