@@ -1,65 +1,184 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useRef } from "react";
+import { motion, useInView } from "framer-motion";
+import { memories, Memory } from "./data/memories";
+import BackgroundMusic from "@/components/BackgroundMusic";
+import SurpriseReveal from "@/components/SurpriseReveal";
 
 export default function Home() {
+  const [isStarted, setIsStarted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const startJourney = () => {
+    if (audioRef.current) {
+      audioRef.current.volume = 0.4;
+      audioRef.current.play().catch(e => console.log("Audio play failed", e));
+    }
+    setIsStarted(true);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="relative min-h-screen bg-black text-white overflow-hidden">
+      <audio ref={audioRef} src="/valentine-special/assets/mp3/music.mp3" loop hidden />
+
+      {isStarted && <BackgroundMusic audioRef={audioRef} />}
+
+      {!isStarted && (
+        <div
+          onClick={startJourney}
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black cursor-pointer"
+        >
+          <motion.h1
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
+            className="text-gray-400 tracking-[0.3em] text-sm md:text-base uppercase text-center px-4 leading-loose"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Click anywhere to start our screen
+          </motion.h1>
         </div>
-      </main>
-    </div>
+      )}
+
+      {isStarted && (
+        <>
+          <HeroSection />
+          <div className="flex flex-col gap-20 md:gap-32 pb-32">
+            {memories.map((memory, index) => (
+              <div key={index}>
+                <ChapterSection data={memory} index={index} />
+                {memory.surprise && (
+                  <SurpriseReveal
+                    question={memory.surprise.question}
+                    answer={memory.surprise.answer}
+                    emoji={memory.surprise.emoji}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+          <FinalPledge />
+        </>
+      )}
+    </main>
+  );
+}
+
+function HeroSection() {
+  return (
+    <section className="h-screen flex flex-col items-center justify-center text-center px-4 relative">
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 2, ease: "easeOut" }}
+        className="z-10"
+      >
+        <h1 className="font-serif text-6xl md:text-9xl mb-6 tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-600">
+          Us.
+        </h1>
+        <p className="text-gray-500 tracking-[0.3em] text-xs md:text-sm uppercase">
+          Scroll slowly, For our Story
+        </p>
+      </motion.div>
+
+
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-black to-black pointer-events-none" />
+    </section>
+  );
+}
+
+function ChapterSection({ data, index }: { data: Memory, index: number }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-20%" });
+
+  const hasText = data.title || data.text;
+
+  return (
+    <section ref={ref} className={`min-h-[50vh] md:min-h-screen flex flex-col md:flex-row items-center justify-center py-10 px-6 gap-8 md:gap-24 ${!hasText ? 'justify-center' : ''}`}>
+
+
+      {hasText && (
+        <div className={`flex-1 max-w-md ${index % 2 === 1 ? "md:order-2" : ""}`}>
+          {data.title && (
+            <motion.h2
+              initial={{ opacity: 0, x: -50 }}
+              animate={isInView ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 1, delay: 0.2 }}
+              className="font-serif text-3xl md:text-5xl mb-4 md:mb-6 text-gray-100"
+            >
+              {data.title}
+            </motion.h2>
+          )}
+          {data.text && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={isInView ? { opacity: 1 } : {}}
+              transition={{ duration: 1, delay: 0.5 }}
+              className="text-gray-400 text-base md:text-xl leading-relaxed font-light"
+            >
+              {data.text}
+            </motion.p>
+          )}
+        </div>
+      )}
+
+
+      <div className={`flex-1 w-full ${hasText ? 'max-w-md' : 'max-w-4xl'} aspect-[3/4] md:aspect-[4/5] relative overflow-hidden bg-gray-900/50 rounded-xl shadow-2xl border border-white/5`}>
+        {data.type === 'video' ? (
+          <motion.video
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={isInView ? { opacity: 1, scale: 1 } : {}}
+            transition={{ duration: 1.5 }}
+            src={data.src}
+            className="w-full h-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+          />
+        ) : (
+          <motion.img
+            initial={{ scale: 1.2, opacity: 0 }}
+            animate={isInView ? { scale: 1, opacity: 1 } : {}}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            src={data.src}
+            alt={data.title || "Our Memory"}
+            className="object-cover w-full h-full opacity-90 hover:opacity-100 transition-opacity duration-700"
+          />
+        )}
+      </div>
+    </section>
+  );
+}
+
+function FinalPledge() {
+  const sentence = "I  Love  You  More  Than  Words".split("  ");
+
+  return (
+    <section className="h-screen flex flex-col items-center justify-center text-center px-4 relative">
+      <div className="flex flex-wrap justify-center gap-x-3 md:gap-x-6 gap-y-2 max-w-5xl z-10">
+        {sentence.map((word, i) => (
+          <motion.span
+            key={i}
+            initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
+            whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: i * 0.2 }}
+            className={`font-serif text-3xl md:text-7xl font-bold ${['Love', 'You'].includes(word) ? 'text-rose-500' : 'text-white'}`}
+          >
+            {word}
+          </motion.span>
+        ))}
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ delay: 3, duration: 2 }}
+        className="mt-16 md:mt-24 text-gray-500 text-[10px] md:text-xs tracking-[0.5em] uppercase"
+      >
+        Happy Valentine's Day
+      </motion.div>
+    </section>
   );
 }
